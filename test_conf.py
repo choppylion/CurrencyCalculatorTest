@@ -1,15 +1,42 @@
+from aenum import AutoNumberEnum
+import os
 import pytest
 from selenium import webdriver
 
+from param_locator import *
+
+DRIVER = "chrome"
+CALCULATOR_LINK = "http://www.sberbank.ru/ru/quotes/converter"
+TEST_PARAM_PATH = "CalcTestParams.csv"
+
+
+class Parameters(AutoNumberEnum):
+    value = MoneyValue, 100, "Value in source currency"
+    src_currency = SrcCurrency, "RUB", "Source currency"
+    dst_currency = DstCurrency, "USD", "Destination currency"
+    source = SrcCode, "card", "Source code"
+    destination = DstCode, "account", "Destination code"
+    exchange_type = ExchangeType, "ibank", "Exchange method"
+    service_pack = ServicePack, "empty", "Service pack"
+    time_conversion = TimeConversion, "current", "Time of conversion"
+
+    def __init__(self, cls, default, desc):
+        self.cls, self.default, self.desc = cls, default, desc
+
 
 def pytest_addoption(parser):
-    parser.addoption("--driver", action="store", default="chrome", help="Type in browser type")
-    parser.addoption("--url", action="store", default="http://www.sberbank.ru/ru/quotes/converter", help="url")
-    parser.addoption("--value", action="store", default="100", help="value in source currency")
-    parser.addoption("--src_currency", action="store", default="RUB", help="source currency")
-    parser.addoption("--dst_currency", action="store", default="USD", help="destination currency")
-    parser.addoption("--src_code", action="store", default="card", help="source code")
-    parser.addoption("--dst_code", action="store", default="account", help="destination code")
-    parser.addoption("--exchange_type", action="store", default="ibank", help="value in source currency")
-    parser.addoption("--service_pack", action="store", default="empty", help="service pack ")
-    parser.addoption("--time_conversion", action="store", default="current", help="time of conversion")
+    parser.addoption("--driver", action="store", default=DRIVER, help="Type in browser type")
+    parser.addoption("--url", action="store", default=CALCULATOR_LINK, help="url")
+
+    for param in Parameters:
+        parser.addoption("--" + param.name, action="store", default=param.default, help=param.desc)
+
+
+def import_params(path=None):
+    if path is None:
+        path = TEST_PARAM_PATH
+
+    if os.path.exists(path):
+        pass
+    else:
+        raise FileNotFoundError("Test parameters not found in \'{}\'".format(path))

@@ -1,6 +1,11 @@
 from datetime import datetime
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from time import sleep
+
+
+TIME_TO_WAIT = 15
 
 
 class ParamLocator:
@@ -10,13 +15,20 @@ class ParamLocator:
     def __init__(self, driver):
         self.driver = driver
 
-    def get_element(self, by=By.XPATH, locator=None):
+    def get_element(self, locator=None, by=By.XPATH):
         if locator is None:
             locator = self.locator
         return self.driver.find_element(by=by, value=locator)
 
-    def get_value(self):
-        raise NotImplementedError
+    def wait_and_click(self, locator=None, by=By.XPATH):
+        if locator is None:
+            locator = self.locator
+
+        sleep(0.1)
+        element = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((by, locator)))
+        element.click()
+
 
     def set_value(self, value):
         raise NotImplementedError
@@ -31,30 +43,27 @@ class MoneyValue(ParamLocator):
         self.get_element().send_keys(value)
         self.get_element().submit()
 
-    def get_value(self):
-        self.get_element().getAttribute("value")
-
 
 class SrcCurrency(ParamLocator):  # RUB CHF EUR GBP JPY USD
 
     common_locator = "//select[@name='converterFrom']/../div/"
     locator = common_locator + "*/em"
-    option_locator = common_locator + "div/span[contains(text(),'{}')]"
+    option_locator = common_locator + "div/span[contains(text(), '{}')]"
 
     def set_value(self, value):
-        self.get_element().click()
-        self.get_element(self.option_locator.format(value)).click()
+        self.wait_and_click(self.locator.format(value))
+        self.wait_and_click(self.option_locator.format(value))
 
 
 class DstCurrency(ParamLocator):  # RUB CHF EUR GBP JPY USD
 
     common_locator = "//select[@name='converterTo']/../div/"
     locator = common_locator + "*/em"
-    option_locator = common_locator + "div/span[contains(text(),'{}')]"
+    option_locator = common_locator + "div/span[contains(text(), '{}')]"
 
     def set_value(self, value):
-        self.get_element().click()
-        self.get_element(self.option_locator.format(value)).click()
+        self.wait_and_click(self.locator.format(value))
+        self.wait_and_click(self.option_locator.format(value))
 
 
 class SrcCode(ParamLocator):
@@ -63,7 +72,7 @@ class SrcCode(ParamLocator):
     # options = ("card", "account", "cash")
 
     def set_value(self, value):
-        self.get_element(self.locator.format(value)).click()
+        self.wait_and_click(self.locator.format(value))
 
 
 class DstCode(ParamLocator):
@@ -72,7 +81,7 @@ class DstCode(ParamLocator):
     # options = ("card", "account", "cash")
 
     def set_value(self, value):
-        self.get_element(self.locator.format(value)).click()
+        self.wait_and_click(self.locator.format(value))
 
 
 class ExchangeType(ParamLocator):
@@ -81,7 +90,7 @@ class ExchangeType(ParamLocator):
     # options = ("ibank", "office", "atm")
 
     def set_value(self, value):
-        self.get_element(self.locator.format(value)).click()
+        self.wait_and_click(self.locator.format(value))
 
 
 class ServicePack(ParamLocator):
@@ -90,69 +99,68 @@ class ServicePack(ParamLocator):
     # options = ("empty", "premier", "first")
 
     def set_value(self, value):
-        self.get_element(self.locator.format(value)).click()
+        self.wait_and_click(self.locator.format(value))
 
 
 class TimeConversion(ParamLocator):
 
     locator = "//input[@name='converterDateSelect' and @value='{}']/../span"
 
-    open_date_picker_locator = "css=button.rates-date-picker__trigger"
-    year_locator = "css=select.ui-datepicker-year"
+    open_date_picker_locator = "button.rates-date-picker__trigger"
+    year_locator = "select.ui-datepicker-year"
     month_locator = "//div[@id='ui-datepicker-div']/div/a[@data-handler='{}']"
     day_locator = "//div[@id='ui-datepicker-div']//a[contains(text(), '{}')]"
     time_locator = "//select[@data-unit='{}']"
-    accept_date_picker_locator = "css=span.rates-button.rates-button_converter-datepicker-hide"
+    accept_date_picker_locator = "span.rates-button.rates-button_converter-datepicker-hide"
 
     def set_value(self, value):
         time = value
 
         if time == "current":
-            self.get_element(self.locator.format("current")).click()
+            self.wait_and_click(self.locator.format("current"))
         else:
-            self.get_element(self.locator.format("select")).click()
+            self.wait_and_click(self.locator.format("select"))
 
             # open time picker
-            self.get_element(By.CSS_SELECTOR, self.open_date_picker_locator).click()
+            self.wait_and_click(self.open_date_picker_locator, By.CSS_SELECTOR)
 
             # set year
-            Select(self.get_element(By.CSS_SELECTOR, self.year_locator).select_by_visible_text(time.year))
+            Select(self.get_element(self.year_locator, By.CSS_SELECTOR)).select_by_visible_text(str(time.year))
 
             # set month
             month_delta = time.month - datetime.now().month
             if month_delta != 0:
                 if month_delta > 0:
-                    shift_month_button = self.get_element(By.CSS_SELECTOR, self.month_locator.format("prev"))
+                    locator = self.month_locator.format("prev")
                 else:
-                    shift_month_button = self.get_element(By.CSS_SELECTOR, self.month_locator.format("next"))
+                    locator = self.month_locator.format("next")
                     month_delta = abs(month_delta)
 
                 while month_delta:
-                    shift_month_button.click()
+                    self.wait_and_click(locator, By.CSS_SELECTOR)
                     month_delta -= 1
 
             # set day
-            self.get_element(self.day_locator.format(time.day)).click()
+            self.wait_and_click(self.day_locator.format(time.day))
 
             # set hours
-            Select(self.get_element(self.time_locator.format('hour')).
-                   select_by_visible_text(time.hour))
+            Select(self.get_element(self.time_locator.format('hour'))).select_by_visible_text(str(time.hour))
             # set minutes
-            Select(self.get_element(self.time_locator.format('minute')).
-                   select_by_visible_text(time.minute))
+            Select(self.get_element(self.time_locator.format('minute'))).select_by_visible_text(str(time.minute))
 
             # accept time
-            self.driver.find_element_by_css_selector(self.accept_date_picker_locator).click()
+            self.wait_and_click(self.accept_date_picker_locator, By.CSS_SELECTOR)
 
 
 class Submit(ParamLocator):
 
-    locator = "css=button.rates-button"
-    result_locator = "css=span.rates-converter-result__total-to"
+    locator = "button.rates-button"
+    result_locator = "span.rates-converter-result__total-to"
 
     def set_value(self, value=None):
-        self.driver.find_element_by_css_selector(self.locator).click()
+        self.wait_and_click(by=By.CSS_SELECTOR)
 
     def get_value(self):
-        self.driver.find_element_by_css_selector(self.result_locator).text()
+        text = self.driver.find_element_by_css_selector(self.result_locator).text
+        return result
 

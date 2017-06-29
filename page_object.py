@@ -25,7 +25,6 @@ class Parameters(AutoNumberEnum):
 
 class CalculatorPage:
 
-    LINK =
 
     @classmethod
     def setup(cls):
