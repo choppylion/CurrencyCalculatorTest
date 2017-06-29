@@ -1,7 +1,6 @@
-from aenum import AutoNumberEnum
 from datetime import datetime
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support.ui import Select
 
 
 class ParamLocator:
@@ -36,7 +35,7 @@ class MoneyValue(ParamLocator):
         self.get_element().getAttribute("value")
 
 
-class SrcCurrency(ParamLocator): # RUB CHF EUR GBP JPY USD
+class SrcCurrency(ParamLocator):  # RUB CHF EUR GBP JPY USD
 
     common_locator = "//select[@name='converterFrom']/../div/"
     locator = common_locator + "*/em"
@@ -47,7 +46,7 @@ class SrcCurrency(ParamLocator): # RUB CHF EUR GBP JPY USD
         self.get_element(self.option_locator.format(value)).click()
 
 
-class DstCurrency(ParamLocator): # RUB CHF EUR GBP JPY USD
+class DstCurrency(ParamLocator):  # RUB CHF EUR GBP JPY USD
 
     common_locator = "//select[@name='converterTo']/../div/"
     locator = common_locator + "*/em"
@@ -157,16 +156,3 @@ class Submit(ParamLocator):
     def get_value(self):
         self.driver.find_element_by_css_selector(self.result_locator).text()
 
-
-class Parameters(AutoNumberEnum):
-    value = MoneyValue
-    src_currency = SrcCurrency
-    dst_currency = DstCurrency
-    source = SrcCode
-    destination = DstCode
-    exchange_type = ExchangeType
-    service_pack = ServicePack
-    time_conversion = TimeConversion
-
-    def __init__(self, cls):
-        self.cls = cls
