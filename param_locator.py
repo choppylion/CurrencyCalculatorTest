@@ -8,7 +8,7 @@ from time import sleep
 TIME_TO_WAIT = 15
 
 
-class ParamLocator:
+class Locator:
 
     locator = None
 
@@ -29,22 +29,21 @@ class ParamLocator:
             EC.element_to_be_clickable((by, locator)))
         element.click()
 
-
     def set_value(self, value):
         raise NotImplementedError
 
 
-class MoneyValue(ParamLocator):
+class MoneyValue(Locator):
 
     locator = "//h6[text()='Конвертация']/../../*/*/form/input"
 
     def set_value(self, value):
         self.get_element().clear()
         self.get_element().send_keys(value)
-        self.get_element().submit()
+        self.get_element().send_keys(" ")
 
 
-class SrcCurrency(ParamLocator):  # RUB CHF EUR GBP JPY USD
+class SrcCurrency(Locator):  # RUB CHF EUR GBP JPY USD
 
     common_locator = "//select[@name='converterFrom']/../div/"
     locator = common_locator + "*/em"
@@ -55,7 +54,7 @@ class SrcCurrency(ParamLocator):  # RUB CHF EUR GBP JPY USD
         self.wait_and_click(self.option_locator.format(value))
 
 
-class DstCurrency(ParamLocator):  # RUB CHF EUR GBP JPY USD
+class DstCurrency(Locator):  # RUB CHF EUR GBP JPY USD
 
     common_locator = "//select[@name='converterTo']/../div/"
     locator = common_locator + "*/em"
@@ -66,7 +65,7 @@ class DstCurrency(ParamLocator):  # RUB CHF EUR GBP JPY USD
         self.wait_and_click(self.option_locator.format(value))
 
 
-class SrcCode(ParamLocator):
+class SrcCode(Locator):
 
     locator = "//input[@name='sourceCode' and @value='{}']/../span"
     # options = ("card", "account", "cash")
@@ -75,7 +74,7 @@ class SrcCode(ParamLocator):
         self.wait_and_click(self.locator.format(value))
 
 
-class DstCode(ParamLocator):
+class DstCode(Locator):
 
     locator = "//input[@name='destinationCode' and @value='{}']/../span"
     # options = ("card", "account", "cash")
@@ -84,7 +83,7 @@ class DstCode(ParamLocator):
         self.wait_and_click(self.locator.format(value))
 
 
-class ExchangeType(ParamLocator):
+class ExchangeType(Locator):
 
     locator = "//input[@name='exchangeType' and @value='{}']/../span"
     # options = ("ibank", "office", "atm")
@@ -93,7 +92,7 @@ class ExchangeType(ParamLocator):
         self.wait_and_click(self.locator.format(value))
 
 
-class ServicePack(ParamLocator):
+class ServicePack(Locator):
 
     locator = "//input[@name='servicePack' and @value='{}']/../span"
     # options = ("empty", "premier", "first")
@@ -102,7 +101,7 @@ class ServicePack(ParamLocator):
         self.wait_and_click(self.locator.format(value))
 
 
-class TimeConversion(ParamLocator):
+class TimeConversion(Locator):
 
     locator = "//input[@name='converterDateSelect' and @value='{}']/../span"
 
@@ -130,29 +129,29 @@ class TimeConversion(ParamLocator):
             # set month
             month_delta = time.month - datetime.now().month
             if month_delta != 0:
-                if month_delta > 0:
+                if month_delta < 0:
                     locator = self.month_locator.format("prev")
+                    month_delta = abs(month_delta)
                 else:
                     locator = self.month_locator.format("next")
-                    month_delta = abs(month_delta)
 
                 while month_delta:
-                    self.wait_and_click(locator, By.CSS_SELECTOR)
+                    self.wait_and_click(locator)
                     month_delta -= 1
 
             # set day
             self.wait_and_click(self.day_locator.format(time.day))
 
             # set hours
-            Select(self.get_element(self.time_locator.format('hour'))).select_by_visible_text(str(time.hour))
+            Select(self.get_element(self.time_locator.format('hour'))).select_by_visible_text(time.strftime("%H"))
             # set minutes
-            Select(self.get_element(self.time_locator.format('minute'))).select_by_visible_text(str(time.minute))
+            Select(self.get_element(self.time_locator.format('minute'))).select_by_visible_text(time.strftime("%M"))
 
             # accept time
             self.wait_and_click(self.accept_date_picker_locator, By.CSS_SELECTOR)
 
 
-class Submit(ParamLocator):
+class Submit(Locator):
 
     locator = "button.rates-button"
     result_locator = "span.rates-converter-result__total-to"
@@ -161,6 +160,8 @@ class Submit(ParamLocator):
         self.wait_and_click(by=By.CSS_SELECTOR)
 
     def get_value(self):
-        text = self.driver.find_element_by_css_selector(self.result_locator).text
-        return result
+        sleep(0.1)
+        element = WebDriverWait(self.driver, 10).until(
+            EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.result_locator), " "))
+        return self.get_element(self.result_locator, By.CSS_SELECTOR).text
 

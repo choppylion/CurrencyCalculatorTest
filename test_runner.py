@@ -13,10 +13,10 @@ params = {
     Parameters.destination: "card",
     Parameters.exchange_type: "office",
     Parameters.service_pack: "empty",
-    Parameters.time_conversion: datetime.strptime('01.06.2017 21:55', '%d.%m.%Y %H:%M')
+    Parameters.time_conversion: datetime.strptime('14.01.2017 05:55', '%d.%m.%Y %H:%M')
 }
 
-result = 1299.88
+result = "12 706 204,38 JPY"
 
 
 #
