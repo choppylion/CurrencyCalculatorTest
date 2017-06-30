@@ -4,8 +4,9 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from time import sleep
 
+import allure
 
-TIME_TO_WAIT = 15
+from test_conf import WAIT_TIME
 
 
 class Locator:
@@ -25,7 +26,7 @@ class Locator:
             locator = self.locator
 
         sleep(0.1)
-        element = WebDriverWait(self.driver, 10).until(
+        element = WebDriverWait(self.driver, WAIT_TIME).until(
             EC.element_to_be_clickable((by, locator)))
         element.click()
 
@@ -113,11 +114,10 @@ class TimeConversion(Locator):
     accept_date_picker_locator = "span.rates-button.rates-button_converter-datepicker-hide"
 
     def set_value(self, value):
-        time = value
-
-        if time == "current":
+        if value == "current":
             self.wait_and_click(self.locator.format("current"))
         else:
+            time = datetime.strptime(value, '%d.%m.%Y %H:%M')
             self.wait_and_click(self.locator.format("select"))
 
             # open time picker
@@ -161,7 +161,7 @@ class Submit(Locator):
 
     def get_value(self):
         sleep(0.1)
-        element = WebDriverWait(self.driver, 10).until(
+        WebDriverWait(self.driver, WAIT_TIME).until(
             EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.result_locator), " "))
         return self.get_element(self.result_locator, By.CSS_SELECTOR).text
 

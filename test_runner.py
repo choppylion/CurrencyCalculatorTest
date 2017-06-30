@@ -1,68 +1,43 @@
-from datetime import datetime
-from selenium.webdriver import Chrome
+import allure
+import pytest
+
+pytest_plugins = 'allure.pytest_plugin'
 
 from param_locator import *
-from test_conf import Parameters
+from test_conf import CALCULATOR_LINK, WAIT_TIME, Parameters, import_test_configs
 
 
-params = {
-    Parameters.value: 100000,
-    Parameters.src_currency: "GBP",
-    Parameters.dst_currency: "JPY",
-    Parameters.source: "cash",
-    Parameters.destination: "card",
-    Parameters.exchange_type: "office",
-    Parameters.service_pack: "empty",
-    Parameters.time_conversion: datetime.strptime('14.01.2017 05:55', '%d.%m.%Y %H:%M')
-}
-
-result = "12 706 204,38 JPY"
-
-
-#
-# class CalculatorPage:
-#
-#     LINK = "http://www.sberbank.ru/ru/quotes/converter"
-#
-#     @classmethod
-#     def setup(cls):
-#         cls.driver = Chrome()
-#         cls.driver.maximize_window()
-#         cls.driver.implicitly_wait(15)
-#         cls.driver.get(cls.LINK)
-#
-#     @classmethod
-#     def teardown(cls):
-#         cls.driver.quit()
-
-#
-# class Driver(object):
+# class Driver:
 #     __instance = None
 #
 #     @classmethod
-#     def get(cls, type='ff'):
-#         # write driver instance init logic here depending on argument
+#     def get(cls):
 #         if not cls.__instance:
 #             cls.__instance = Chrome()
 #         return cls.__instance
+#
 
 
-driver = Chrome()
-driver.implicitly_wait(15)
-driver.get("http://www.sberbank.ru/ru/quotes/converter")
+configs = import_test_configs()
 
 
-for param, value in params.items():
-    element = param.cls(driver)
-    element.set_value(value)
+def test_conversion_result(expect, real):
+    assert expect == real_result
 
-element = Submit(driver)
-element.set_value()
-real_result = element.get_value()
 
-assert result == real_result
+for params, expecting_result in configs:
+    for param, value in params.items():
+        with pytest.a
+        enum_param = Parameters.by_str(param)
+        element = enum_param.cls(driver)
+        element.set_value(value)
 
-driver.quit()
+    element = Submit(driver)
+    element.set_value()
+    real_result = element.get_value()
+    test_conversion_result(expecting_result, real_result)
+
+    driver.quit()
 
 
 

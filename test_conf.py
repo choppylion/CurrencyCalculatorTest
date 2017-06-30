@@ -1,13 +1,15 @@
 from aenum import AutoNumberEnum
+import csv
 import os
 import pytest
-from selenium import webdriver
+from selenium.webdriver import Chrome
 
 from param_locator import *
 
 DRIVER = "chrome"
 CALCULATOR_LINK = "http://www.sberbank.ru/ru/quotes/converter"
-TEST_PARAM_PATH = "CalcTestParams.csv"
+TEST_CONFIG_PATH = "test_config.csv"
+WAIT_TIME = 15
 
 
 class Parameters(AutoNumberEnum):
@@ -23,6 +25,23 @@ class Parameters(AutoNumberEnum):
     def __init__(self, cls, default, desc):
         self.cls, self.default, self.desc = cls, default, desc
 
+    @classmethod
+    def by_str(cls, title):
+        for param in cls:
+            if param.name == title:
+                return param
+        raise KeyError("{} not found in {}".format(title, cls))
+
+
+@pytest.yield_fixture()
+def driver():
+    _driver = Chrome()
+    _driver.implicitly_wait(WAIT_TIME)
+    _driver.maximize_window()
+    _driver.get(CALCULATOR_LINK)
+    yield _driver
+    _driver.quit()
+
 
 def pytest_addoption(parser):
     parser.addoption("--driver", action="store", default=DRIVER, help="Type in browser type")
@@ -32,11 +51,19 @@ def pytest_addoption(parser):
         parser.addoption("--" + param.name, action="store", default=param.default, help=param.desc)
 
 
-def import_params(path=None):
+def import_test_configs(path=None):
     if path is None:
-        path = TEST_PARAM_PATH
+        path = TEST_CONFIG_PATH
 
     if os.path.exists(path):
-        pass
+        configs = []
+        with open(path, 'r', encoding='utf-8') as fr:
+            reader = csv.DictReader(fr)
+            for cfg_dict in reader:
+                result = cfg_dict["result"]
+                del cfg_dict["result"]
+                configs.append((cfg_dict, result))
+        return configs
+
     else:
         raise FileNotFoundError("Test parameters not found in \'{}\'".format(path))

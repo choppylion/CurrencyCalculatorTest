@@ -1,0 +1,4 @@
+value,src_currency,dst_currency,source,destination,exchange_type,service_pack,time_conversion,result
+100000,"GBP","JPY","cash","card","office","empty","14.01.2017 05:55","12 706 204,38 JPY"
+1,"CHF","GBP","account","cash","office","empty","current","0,73 GBP"
+999999999999,"JPY","CHF","card","cash","atm","empty","current","7 714 983 962,11 CHF"
