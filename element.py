@@ -9,12 +9,14 @@ import allure
 from test_conf import WAIT_TIME
 
 
-class Locator:
+class BaseElement:
+
+    """Base page class that is initialized on every page object class."""
 
     locator = None
 
-    def __init__(self, driver):
-        self.driver = driver
+    def __init__(self, page_obj):
+        self.page_obj = page_obj
 
     def get_element(self, locator=None, by=By.XPATH):
         if locator is None:
@@ -26,15 +28,20 @@ class Locator:
             locator = self.locator
 
         sleep(0.1)
-        element = WebDriverWait(self.driver, WAIT_TIME).until(
+        element = WebDriverWait(self.page_obj.driver, WAIT_TIME).until(
             EC.element_to_be_clickable((by, locator)))
         element.click()
 
     def set_value(self, value):
+        """Sets the text to the value supplied"""
+        raise NotImplementedError
+
+    def get_value(self):
+        """Gets the text of the specified object"""
         raise NotImplementedError
 
 
-class MoneyValue(Locator):
+class MoneyValue(BaseElement):
 
     locator = "//h6[text()='Конвертация']/../../*/*/form/input"
 
@@ -43,8 +50,11 @@ class MoneyValue(Locator):
         self.get_element().send_keys(value)
         self.get_element().send_keys(" ")
 
+    def get_value(self):
+        self.get_element().get_attribute("value")
 
-class SrcCurrency(Locator):  # RUB CHF EUR GBP JPY USD
+
+class SrcCurrency(BaseElement):  # RUB CHF EUR GBP JPY USD
 
     common_locator = "//select[@name='converterFrom']/../div/"
     locator = common_locator + "*/em"
@@ -55,7 +65,7 @@ class SrcCurrency(Locator):  # RUB CHF EUR GBP JPY USD
         self.wait_and_click(self.option_locator.format(value))
 
 
-class DstCurrency(Locator):  # RUB CHF EUR GBP JPY USD
+class DstCurrency(BaseElement):  # RUB CHF EUR GBP JPY USD
 
     common_locator = "//select[@name='converterTo']/../div/"
     locator = common_locator + "*/em"
@@ -66,7 +76,7 @@ class DstCurrency(Locator):  # RUB CHF EUR GBP JPY USD
         self.wait_and_click(self.option_locator.format(value))
 
 
-class SrcCode(Locator):
+class SrcCode(BaseElement):
 
     locator = "//input[@name='sourceCode' and @value='{}']/../span"
     # options = ("card", "account", "cash")
@@ -75,7 +85,7 @@ class SrcCode(Locator):
         self.wait_and_click(self.locator.format(value))
 
 
-class DstCode(Locator):
+class DstCode(BaseElement):
 
     locator = "//input[@name='destinationCode' and @value='{}']/../span"
     # options = ("card", "account", "cash")
@@ -84,7 +94,7 @@ class DstCode(Locator):
         self.wait_and_click(self.locator.format(value))
 
 
-class ExchangeType(Locator):
+class ExchangeType(BaseElement):
 
     locator = "//input[@name='exchangeType' and @value='{}']/../span"
     # options = ("ibank", "office", "atm")
@@ -93,7 +103,7 @@ class ExchangeType(Locator):
         self.wait_and_click(self.locator.format(value))
 
 
-class ServicePack(Locator):
+class ServicePack(BaseElement):
 
     locator = "//input[@name='servicePack' and @value='{}']/../span"
     # options = ("empty", "premier", "first")
@@ -102,7 +112,7 @@ class ServicePack(Locator):
         self.wait_and_click(self.locator.format(value))
 
 
-class TimeConversion(Locator):
+class TimeConversion(BaseElement):
 
     locator = "//input[@name='converterDateSelect' and @value='{}']/../span"
 
@@ -151,17 +161,20 @@ class TimeConversion(Locator):
             self.wait_and_click(self.accept_date_picker_locator, By.CSS_SELECTOR)
 
 
-class Submit(Locator):
+class Submit(BaseElement):
 
     locator = "button.rates-button"
-    result_locator = "span.rates-converter-result__total-to"
 
     def set_value(self, value=None):
         self.wait_and_click(by=By.CSS_SELECTOR)
 
+
+class Result(BaseElement):
+
+    locator = "span.rates-converter-result__total-to"
+
     def get_value(self):
         sleep(0.1)
-        WebDriverWait(self.driver, WAIT_TIME).until(
-            EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.result_locator), " "))
-        return self.get_element(self.result_locator, By.CSS_SELECTOR).text
-
+        WebDriverWait(self.page_obj.driver, WAIT_TIME).until(
+            EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.locator), " "))
+        return self.get_element(self.locator, By.CSS_SELECTOR).text

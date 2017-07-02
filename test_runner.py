@@ -1,43 +1,52 @@
-import allure
+from aenum import AutoNumberEnum
+import csv
+import os
 import pytest
+from selenium.webdriver import Chrome
 
-pytest_plugins = 'allure.pytest_plugin'
+from element import *
+from page_object import CalculatorPage
 
-from param_locator import *
-from test_conf import CALCULATOR_LINK, WAIT_TIME, Parameters, import_test_configs
-
-
-# class Driver:
-#     __instance = None
-#
-#     @classmethod
-#     def get(cls):
-#         if not cls.__instance:
-#             cls.__instance = Chrome()
-#         return cls.__instance
-#
+DRIVER = "chrome"
+TEST_CONFIG_PATH = "test_config.csv"
+SLEEP_TIME = 0.1
+WAIT_TIME = 15
 
 
-configs = import_test_configs()
-
-
-def test_conversion_result(expect, real):
-    assert expect == real_result
-
-
-for params, expecting_result in configs:
-    for param, value in params.items():
-        with pytest.a
-        enum_param = Parameters.by_str(param)
-        element = enum_param.cls(driver)
-        element.set_value(value)
-
-    element = Submit(driver)
-    element.set_value()
-    real_result = element.get_value()
-    test_conversion_result(expecting_result, real_result)
-
+@pytest.yield_fixture()
+def webdriver(request):
+    driver = Chrome()
+    driver.implicitly_wait(WAIT_TIME)
+    driver.maximize_window()
+    yield driver
     driver.quit()
 
 
+def import_test_data(path=None):
+    if path is None:
+        path = TEST_CONFIG_PATH
 
+    if os.path.exists(path):
+        configs = []
+        try:
+            with open(path, 'r', encoding='utf-8') as fr:
+                reader = csv.DictReader(fr)
+                for cfg_dict in reader:
+                    result = cfg_dict["result"]
+                    del cfg_dict["result"]
+                    configs.append((cfg_dict, result))
+            return configs
+        except Exception as e:
+            raise IOError("Impossible to read test data:\n{}".format(e))
+
+    else:
+        raise FileNotFoundError("Test parameters not found in \'{}\'".format(path))
+
+
+@pytest.mark.parametrize('params, expected', import_test_data())
+def test_currency_conversion_result(params, expected):
+    page = CalculatorPage()
+    page.set_params(params)
+    page.submit()
+    real_result = page.get_result()
+    assert expected == real_result
