@@ -1,44 +1,8 @@
 from datetime import datetime
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select, WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from time import sleep
+from selenium.webdriver.support.ui import Select
 
-import allure
-
-from test_conf import WAIT_TIME
-
-
-class BaseElement:
-
-    """Base page class that is initialized on every page object class."""
-
-    locator = None
-
-    def __init__(self, page_obj):
-        self.page_obj = page_obj
-
-    def get_element(self, locator=None, by=By.XPATH):
-        if locator is None:
-            locator = self.locator
-        return self.driver.find_element(by=by, value=locator)
-
-    def wait_and_click(self, locator=None, by=By.XPATH):
-        if locator is None:
-            locator = self.locator
-
-        sleep(0.1)
-        element = WebDriverWait(self.page_obj.driver, WAIT_TIME).until(
-            EC.element_to_be_clickable((by, locator)))
-        element.click()
-
-    def set_value(self, value):
-        """Sets the text to the value supplied"""
-        raise NotImplementedError
-
-    def get_value(self):
-        """Gets the text of the specified object"""
-        raise NotImplementedError
+from baseelement import *
+from params import SLEEP_TIME, WAIT_TIME
 
 
 class MoneyValue(BaseElement):
@@ -50,66 +14,33 @@ class MoneyValue(BaseElement):
         self.get_element().send_keys(value)
         self.get_element().send_keys(" ")
 
-    def get_value(self):
-        self.get_element().get_attribute("value")
+
+class SrcCurrency(CurrencyDropDown):
+    name = "converterFrom"
 
 
-class SrcCurrency(BaseElement):  # RUB CHF EUR GBP JPY USD
-
-    common_locator = "//select[@name='converterFrom']/../div/"
-    locator = common_locator + "*/em"
-    option_locator = common_locator + "div/span[contains(text(), '{}')]"
-
-    def set_value(self, value):
-        self.wait_and_click(self.locator.format(value))
-        self.wait_and_click(self.option_locator.format(value))
+class DstCurrency(CurrencyDropDown):
+    name = "converterTo"
 
 
-class DstCurrency(BaseElement):  # RUB CHF EUR GBP JPY USD
-
-    common_locator = "//select[@name='converterTo']/../div/"
-    locator = common_locator + "*/em"
-    option_locator = common_locator + "div/span[contains(text(), '{}')]"
-
-    def set_value(self, value):
-        self.wait_and_click(self.locator.format(value))
-        self.wait_and_click(self.option_locator.format(value))
-
-
-class SrcCode(BaseElement):
-
-    locator = "//input[@name='sourceCode' and @value='{}']/../span"
+class SrcCode(RadioGroup):
+    name = "sourceCode"
     # options = ("card", "account", "cash")
 
-    def set_value(self, value):
-        self.wait_and_click(self.locator.format(value))
 
-
-class DstCode(BaseElement):
-
-    locator = "//input[@name='destinationCode' and @value='{}']/../span"
+class DstCode(RadioGroup):
+    name = "destinationCode"
     # options = ("card", "account", "cash")
 
-    def set_value(self, value):
-        self.wait_and_click(self.locator.format(value))
 
-
-class ExchangeType(BaseElement):
-
-    locator = "//input[@name='exchangeType' and @value='{}']/../span"
+class ExchangeType(RadioGroup):
+    name = "exchangeType"
     # options = ("ibank", "office", "atm")
 
-    def set_value(self, value):
-        self.wait_and_click(self.locator.format(value))
 
-
-class ServicePack(BaseElement):
-
-    locator = "//input[@name='servicePack' and @value='{}']/../span"
+class ServicePack(RadioGroup):
+    name = "servicePack"
     # options = ("empty", "premier", "first")
-
-    def set_value(self, value):
-        self.wait_and_click(self.locator.format(value))
 
 
 class TimeConversion(BaseElement):
@@ -173,8 +104,11 @@ class Result(BaseElement):
 
     locator = "span.rates-converter-result__total-to"
 
+    def set_value(self, value=None):
+        pass
+
     def get_value(self):
-        sleep(0.1)
+        sleep(SLEEP_TIME)
         WebDriverWait(self.page_obj.driver, WAIT_TIME).until(
             EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.locator), " "))
         return self.get_element(self.locator, By.CSS_SELECTOR).text

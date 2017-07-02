@@ -1,64 +1,31 @@
-from aenum import AutoNumberEnum
-from selenium.webdriver import Chrome
-from selenium.webdriver.common.by import By
-# from webium import BasePage, Find
-# from common import Driver
+import pytest
+
+from element import *
+from params import Parameters, webdriver
 
 
-class Parameters(AutoNumberEnum):
-
-    value = "input.value" #.rates-aside__filter-block-line-right
-    src_currency = ".converterFrom"
-    dst_currency = ".converterTo"
-    source = ".sourceCode"
-    destination = ".destinationCode"
-    exchange_method = ".exchangeType"
-    service = ".servicePack"
-    time = ".converterDateSelect"
-
-    button = "css=button.rates-button"
-    result = "css=rates-converter-result__total-to"
-
-    def __init__(self, locator):
-        self.locator = locator
-
-
+@pytest.mark.usefixtures("webdriver")
 class CalculatorPage:
+    """
+    Page Object of main currency calculator page
+    """
+    link = "http://www.sberbank.ru/ru/quotes/converter"
 
+    def __init__(self, driver):
+        self.driver = driver
 
-    @classmethod
-    def setup(cls):
-        cls.driver = Chrome()
-        cls.driver.maximize_window()
-        cls.driver.implicitly_wait(15)
-        cls.driver.get(cls.LINK)
+    def open(self):
+        self.driver.get(self.link)
 
-    @classmethod
-    def teardown(cls):
-        cls.driver.quit()
+    def set_params(self, params):
 
+        for param in Parameters:
+            param_value = params[param.name]
+            element = param.cls(self.driver)
+            element.set_value(param_value)
 
+    def submit(self):
+        Submit(self.driver).set_value()
 
-#
-# class AbstractBasePage(BasePage):
-#
-#     def __init__(self, url):
-#         BasePage.__init__(self, Driver.get(), url)
-#
-#     def get_title(self):
-#         return Driver.get().title
-#
-#
-# class DashboardPage(AbstractBasePage):
-#
-#     _first_lesson = Find(
-#         by=By.XPATH, value="(//div[contains(@class, 'lesson-block')])[1]/a")
-#
-#     def __init__(self):
-#         AbstractBasePage.__init__(self, "http://lessons2.ru")
-#
-#     def open_first_lesson(self):
-#         self._first_lesson.click()
-#         return LessonPage()
-
-
+    def get_result(self):
+        return Result(self.driver).get_value()
