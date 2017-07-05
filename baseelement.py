@@ -1,11 +1,11 @@
 from time import sleep
 
-import allure
+import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from params import SLEEP_TIME, WAIT_TIME
+from conftest import WAIT_TIME, PAUSE_TIME #, webdriver
 
 
 class BaseElement:
@@ -14,8 +14,8 @@ class BaseElement:
 
     locator = None
 
-    def __init__(self, page_obj):
-        self.page_obj = page_obj
+    def __init__(self, webdriver):
+        self.driver = webdriver
 
     def get_element(self, locator=None, by=By.XPATH):
         if locator is None:
@@ -26,10 +26,11 @@ class BaseElement:
         if locator is None:
             locator = self.locator
 
-        sleep(SLEEP_TIME)
-        element = WebDriverWait(self.page_obj.driver, WAIT_TIME).until(
-            EC.element_to_be_clickable((by, locator)))
-        element.click()
+        with pytest.allure.step("Waiting element \"{}\" to be clickable".format(self.__class__.__name__)):
+            sleep(PAUSE_TIME)
+            element = WebDriverWait(self.driver, WAIT_TIME).until(
+                EC.element_to_be_clickable((by, locator)))
+            element.click()
 
     def set_value(self, value):
         """Sets the text to the value supplied"""

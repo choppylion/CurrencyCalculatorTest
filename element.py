@@ -1,8 +1,8 @@
 from datetime import datetime
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
 from baseelement import *
-from params import SLEEP_TIME, WAIT_TIME
 
 
 class MoneyValue(BaseElement):
@@ -10,7 +10,8 @@ class MoneyValue(BaseElement):
     locator = "//h6[text()='Конвертация']/../../*/*/form/input"
 
     def set_value(self, value):
-        self.get_element().clear()
+        # self.get_element().clear()
+        self.get_element().send_keys(Keys.CONTROL + "a", Keys.DELETE)
         self.get_element().send_keys(value)
         self.get_element().send_keys(" ")
 
@@ -108,7 +109,7 @@ class Result(BaseElement):
         pass
 
     def get_value(self):
-        sleep(SLEEP_TIME)
-        WebDriverWait(self.page_obj.driver, WAIT_TIME).until(
+        sleep(PAUSE_TIME)
+        WebDriverWait(self.driver, WAIT_TIME).until(
             EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.locator), " "))
         return self.get_element(self.locator, By.CSS_SELECTOR).text
