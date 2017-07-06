@@ -10,19 +10,37 @@ from conftest import WAIT_TIME, PAUSE_TIME #, webdriver
 
 class BaseElement:
 
-    """Base page class that is initialized on every page object class."""
+    """
+    Base page class that is initialized on every page object class.
+    """
 
+    #: base locator
     locator = None
 
     def __init__(self, webdriver):
+        """
+        :param webdriver: selenium webdriver instance
+        """
         self.driver = webdriver
 
     def get_element(self, locator=None, by=By.XPATH):
+        """
+        Finds element on form by specific locator
+        :param locator: path to element
+        :param by: type of locator
+        :return: found element
+        """
+
         if locator is None:
             locator = self.locator
         return self.driver.find_element(by=by, value=locator)
 
     def wait_and_click(self, locator=None, by=By.XPATH):
+        """
+        Waits specific time until element to be clickable and click it
+        :param locator: path to element
+        :param by: type of locator
+        """
         if locator is None:
             locator = self.locator
 
@@ -33,25 +51,43 @@ class BaseElement:
             element.click()
 
     def set_value(self, value):
-        """Sets the text to the value supplied"""
+        """
+        Sets the given value
+        """
         raise NotImplementedError
 
 
-class CurrencyDropDown(BaseElement):  # RUB CHF EUR GBP JPY USD
+class CurrencyDropDown(BaseElement):
 
-    name = ""
+    """
+    Element presents dropdown list with following item: RUB CHF EUR GBP JPY USD
+    """
+
+    name = None
     locator = "//select[@name='{}']/../div/*/em"
     option_locator = "//select[@name='{}']/../div/div/span[contains(text(), '{}')]"
 
     def set_value(self, value):
+        """
+        Clicks on main dropdown element and selects given item
+        :param value: value of item that has to be selected
+        """
         self.wait_and_click(self.locator.format(self.name, value))
         self.wait_and_click(self.option_locator.format(self.name, value))
 
 
 class RadioGroup(BaseElement):
 
+    """
+    Element presents group of radiobuttons
+    """
+
+    name = None
     locator = "//input[@name='{}' and @value='{}']/../span"
-    name = ""
 
     def set_value(self, value):
+        """
+        Clicks on radiobutton
+        :param value: value of item that has to be selected
+        """
         self.wait_and_click(self.locator.format(self.name, value))
