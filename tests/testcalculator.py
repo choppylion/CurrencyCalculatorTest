@@ -27,6 +27,7 @@ class TestCalculator:
         real_result = page.get_conversion_result()
         assert expected_result == real_result
 
+    @pytest.mark.skip
     @pytest.mark.parametrize("config", import_test_data("unselectable_exchange.csv"))
     def test_unselectable_exchange(self, webdriver, config):
         """
@@ -64,7 +65,7 @@ class TestCalculator:
         page.set_params(config)
         rates = page.get_conversion_rate()
         for index in range(0, len(rates), 2):
-            buy_rate, sell_rate = rates[index:2]
+            buy_rate, sell_rate = rates[index:index+2]
             assert buy_rate < sell_rate
 
     @pytest.mark.parametrize("config", import_test_data("graph_date_display.csv"))
