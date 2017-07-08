@@ -58,12 +58,24 @@ class BaseElement:
         pass
 
 
-class DropDown(BaseElement):
+class Label(BaseElement):
+    """
+    Element presents simple text label
+    """
+    locator = None
 
+    def get_value(self):
+        with pytest.allure.step("Waiting for text to be available: \"{}\"".format(self.locator)):
+            sleep(PAUSE_TIME)
+            WebDriverWait(self.driver, WAIT_TIME).until(
+                EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.locator), " "))
+        return self.get_element(self.locator, By.CSS_SELECTOR).text
+
+
+class DropDown(BaseElement):
     """
     Element presents dropdown list with following item: RUB CHF EUR GBP JPY USD
     """
-
     name = None
     locator = "//select[@name='{}']/../div/*/em"
     option_locator = "//select[@name='{}']/../div/div/span[contains(text(), '{}')]"
@@ -94,4 +106,4 @@ class RadioGroup(BaseElement):
         self.wait_and_click(self.locator.format(self.name, value))
 
     def get_value(self, option_type):
-        return self.get_element(self.locator.format(self.name, option_type)).get_value()
+        return self.get_element(self.locator.format(self.name, option_type)).is_selected()

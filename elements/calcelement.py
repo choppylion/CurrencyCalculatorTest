@@ -55,17 +55,59 @@ class ServicePack(RadioGroup):
     name = "servicePack"
 
 
-class TimeConversion(BaseElement):
+class DatePicker(BaseElement):
     """
     Element presents radiogroup and custom datepicker
     """
+    locator = None
+    open_date_picker_locator = None
+    fmt = '%d.%m.%Y'
 
-    locator = "//input[@name='converterDateSelect' and @value='{}']/../span"
-
-    open_date_picker_locator = "button.rates-date-picker__trigger"
     year_locator = "select.ui-datepicker-year"
     month_locator = "//div[@id='ui-datepicker-div']/div/a[@data-handler='{}']"
     day_locator = "//div[@id='ui-datepicker-div']//a[contains(text(), '{}')]"
+
+    def set_value(self, value):
+        raise NotImplementedError
+
+    def select_date(self, date_time):
+        # open date_time picker
+        with pytest.allure.step("Clicking custom date picker: \"{}\"".format(self.open_date_picker_locator)):
+            self.wait_and_click(self.open_date_picker_locator, By.XPATH)
+
+        # sets year
+        with pytest.allure.step("Selecting year: \"{}\"".format(self.year_locator)):
+            Select(self.get_element(self.year_locator, By.CSS_SELECTOR)).select_by_visible_text(str(date_time.year))
+
+        # set month
+        month_delta = date_time.month - datetime.now().month
+        if month_delta != 0:
+            if month_delta < 0:
+                locator = self.month_locator.format("prev")
+                month_delta = abs(month_delta)
+            else:
+                locator = self.month_locator.format("next")
+
+            with pytest.allure.step("Selecting month: \"{}\"".format(locator)):
+                while month_delta:
+                    self.wait_and_click(locator)
+                    month_delta -= 1
+
+        # set day
+        with pytest.allure.step("Selecting day: \"{}\"".format(self.day_locator.format(date_time.day))):
+            self.wait_and_click(self.day_locator.format(date_time.day))
+
+
+class TimeConversion(DatePicker):
+    """
+    Element presents radiogroup and custom datepicker
+    """
+    locator = "//input[@name='converterDateSelect' and @value='{}']/../span"
+    fmt = '%d.%m.%Y %H:%M'
+
+    open_date_picker_locator = "//input[@data-property=\"converterDate\"]" \
+                               "/.." \
+                               "/button[@class=\"rates-date-picker__trigger\"]"
     time_locator = "//select[@data-unit='{}']"
     accept_date_picker_locator = "span.rates-button.rates-button_converter-datepicker-hide"
 
@@ -73,48 +115,73 @@ class TimeConversion(BaseElement):
         if value == "current":
             self.wait_and_click(self.locator.format("current"))
         else:
-            time = datetime.strptime(value, '%d.%m.%Y %H:%M')
-
             self.wait_and_click(self.locator.format("select"))
+            date_time = datetime.strptime(value, self.fmt)
+            self.select_date(date_time)
+            self.select_time(date_time)
+            self.accept()
 
-            # open time picker
-            with pytest.allure.step("Clicking custom date picker: \"{}\"".format(self.open_date_picker_locator)):
-                self.wait_and_click(self.open_date_picker_locator, By.CSS_SELECTOR)
+    def select_time(self, date_time):
+        # set hours
+        with pytest.allure.step("Selecting hour: \"{}\"".format(self.time_locator.format('hour'))):
+            Select(self.get_element(self.time_locator.format('hour'))).\
+                select_by_visible_text(date_time.strftime("%H"))
+        # set minutes
+        with pytest.allure.step("Selecting minutes: \"{}\"".format(self.time_locator.format('minute'))):
+            Select(self.get_element(self.time_locator.format('minute'))).\
+                select_by_visible_text(date_time.strftime("%M"))
 
-            # sets year
-            with pytest.allure.step("Selecting year: \"{}\"".format(self.year_locator)):
-                Select(self.get_element(self.year_locator, By.CSS_SELECTOR)).select_by_visible_text(str(time.year))
+    def accept(self):
+        # accept time
+        with pytest.allure.step("Accepting selected time: \"{}\"".format(self.accept_date_picker_locator)):
+            self.wait_and_click(self.accept_date_picker_locator, By.CSS_SELECTOR)
 
-            # set month
-            month_delta = time.month - datetime.now().month
-            if month_delta != 0:
-                if month_delta < 0:
-                    locator = self.month_locator.format("prev")
-                    month_delta = abs(month_delta)
-                else:
-                    locator = self.month_locator.format("next")
 
-                with pytest.allure.step("Selecting month: \"{}\"".format(locator)):
-                    while month_delta:
-                        self.wait_and_click(locator)
-                        month_delta -= 1
+class GraphTime(DatePicker):
+    """
+    Element presents datepicker for plotting graph rate by time
+    """
 
-            # set day
-            with pytest.allure.step("Selecting day: \"{}\"".format(self.day_locator.format(time.day))):
-                self.wait_and_click(self.day_locator.format(time.day))
+    open_date_picker_locator = "//input[@data-property=\"{}\"]/../button[@class=\"rates-date-picker__trigger\"]"
+    accept_dates_locator = "button.rates-details__filter-button"
+    time_period_locator = "div.jqplot-xaxis-tick"
+    time_interval_count = 6
 
-            # set hours
-            with pytest.allure.step("Selecting hour: \"{}\"".format(self.time_locator.format('hour'))):
-                Select(self.get_element(self.time_locator.format('hour'))).\
-                    select_by_visible_text(time.strftime("%H"))
-            # set minutes
-            with pytest.allure.step("Selecting minutes: \"{}\"".format(self.time_locator.format('minute'))):
-                Select(self.get_element(self.time_locator.format('minute'))).\
-                    select_by_visible_text(time.strftime("%M"))
+    def set_value(self, value):
+        if value != "current":
+            date_time = datetime.strptime(value, self.fmt)
+            self.select_date(date_time)
+            self.accept()
 
-            # accept time
-            with pytest.allure.step("Accepting selected time: \"{}\"".format(self.accept_date_picker_locator)):
-                self.wait_and_click(self.accept_date_picker_locator, By.CSS_SELECTOR)
+    def get_value(self):
+        with pytest.allure.step("Waiting for graph to be available: \"{}\"".format(self.locator)):
+            sleep(PAUSE_TIME)
+            WebDriverWait(self.driver, WAIT_TIME).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, self.time_period_locator)))
+            sleep(1)
+            elements = self.driver.find_elements(By.CSS_SELECTOR, self.time_period_locator)
+            periods = []
+            for i in range(0, len(elements), self.time_interval_count):
+                start, end = elements[i].text, elements[i + self.time_interval_count - 1].text
+                periods.append((start, end))
+            return periods
+
+    def accept(self):
+        self.wait_and_click(self.accept_dates_locator, by=By.CSS_SELECTOR)
+
+
+class GraphStartTime(GraphTime):
+    """
+    Element presents start datepicker for plotting graph rate by time
+    """
+    open_date_picker_locator = GraphTime.open_date_picker_locator.format("fromDate")
+
+
+class GraphEndTime(GraphTime):
+    """
+    Element presents end datepicker for plotting graph rate by time
+    """
+    open_date_picker_locator = GraphTime.open_date_picker_locator.format("toDate")
 
 
 class Submit(BaseElement):
@@ -142,16 +209,26 @@ class Result(BaseElement):
         return self.get_element(self.locator, By.CSS_SELECTOR).text
 
 
-class ServicePackErrorLabel(BaseElement):
+class ServicePackError(Label):
     """
     Label with error message if inappropriate options were selected
     """
     locator = "span.rates-aside__error"
     error_text = "Нельзя выбрать пакет для данных типов валют"
 
+
+class ConversionRate(BaseElement):
+    """
+    Label with conversion rate for selected currency
+    """
+    locator = "span.rates-current__rate-value"
+
     def get_value(self):
-        with pytest.allure.step("Waiting for message to be available: \"{}\"".format(self.locator)):
+
+        with pytest.allure.step("Waiting for result to be available: \"{}\"".format(self.locator)):
             sleep(PAUSE_TIME)
             WebDriverWait(self.driver, WAIT_TIME).until(
-                EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.locator), " "))
-        return self.get_element(self.locator, By.CSS_SELECTOR).text
+                EC.presence_of_element_located((By.CSS_SELECTOR, self.locator)))
+
+            elements = self.driver.find_elements(By.CSS_SELECTOR, self.locator)
+            return [float(e.text.replace(",", ".")) for e in elements]

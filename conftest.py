@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import csv
 import os
 
@@ -35,6 +36,12 @@ def import_test_data(filename):
         project_dir = os.path.dirname(os.path.abspath(__file__))
         path = os.path.abspath(os.path.join(project_dir, "configs", filename))
         with open(path, 'r') as fr:
-            return list(csv.DictReader(fr))
+            reader = csv.DictReader(fr)
+            header = reader.fieldnames
+            config = [
+                OrderedDict((key, row[key]) for key in header)
+                for row in reader
+            ]
+            return config
     except Exception as e:
         raise IOError("Impossible to read test data:\n{}".format(e))
