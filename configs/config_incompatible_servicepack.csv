@@ -1,0 +1,3 @@
+src_currency,dst_currency,source,destination,exchange_type,service_pack
+"JPY","CHF","card","account","office","premier"
+"CHF","GBP","account","cash","office","first"

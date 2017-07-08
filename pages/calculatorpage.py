@@ -1,8 +1,8 @@
-from aenum import AutoNumberEnum
 import pytest
+from aenum import AutoNumberEnum
 
-from element import MoneyValue, SrcCurrency, DstCurrency, SrcCode, DstCode, \
-    ExchangeType, ServicePack, TimeConversion, Submit, Result
+from elements.calcelement import MoneyValue, SrcCurrency, DstCurrency, SrcCode, DstCode, \
+    ExchangeType, ServicePack, TimeConversion, Submit, Result, ServicePackErrorLabel
 
 
 class Parameters(AutoNumberEnum):
@@ -58,25 +58,42 @@ class CalculatorPage:
         """
         self.driver.get(self.link)
 
-    def set_params(self, params):
+    def set_params(self, params_dict):
         """
         Sets given params for every element in calculator
-        :param params: params with values to apply
+        :param params_dict: params with values to apply
         """
-        for param in Parameters:
-            param_value = params[param.name]
-            with pytest.allure.step("Trying to set \'{}\' with value \'{}\'".format(param.name, param_value)):
-                element = param.cls(self.driver)
-                element.set_value(param_value)
+        with pytest.allure.step("Setting params"):
+            for param, value in params_dict.items():
+                self.set_param(param, value)
+
+    def set_param(self, param, value):
+        with pytest.allure.step("Trying to set \'{}\' with value \'{}\'".format(param, value)):
+            element = self.convert_param(param).cls(self.driver)
+            element.set_value(value)
 
     def submit(self):
         """
         Submits form with applied parameters
         """
-        Submit(self.driver).set_value()
+        with pytest.allure.step("Submitting"):
+            Submit(self.driver).set_value()
 
-    def get_result(self):
+    def get_conversion_result(self):
         """
         Retrieves result from form
         """
-        return Result(self.driver).get_value()
+        with pytest.allure.step("Getting result"):
+            return Result(self.driver).get_value()
+
+    def is_radio_selected(self, param, value):
+        with pytest.allure.step("Trying to get \'{}\'[\'{}\'] selected status".format(param, value)):
+            element = self.convert_param(param).cls(self.driver)
+            return element.get_value(value)
+
+    def is_servicepack_error(self):
+        text = ServicePackErrorLabel(self.driver).get_value()
+        return ServicePackErrorLabel.error_text in text
+
+    def convert_param(self, param_string):
+        return Parameters.by_name(param_string)

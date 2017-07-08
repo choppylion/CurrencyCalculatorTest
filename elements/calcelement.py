@@ -1,13 +1,15 @@
 from datetime import datetime
+
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
-from baseelement import *
+from elements.baseelement import *
 
 
 class MoneyValue(BaseElement):
-
-    """Text field for money value to convert"""
+    """
+    Text field for money value to convert
+    """
     locator = "//h6[text()='Конвертация']/../../*/*/form/input"
 
     def set_value(self, value):
@@ -15,19 +17,20 @@ class MoneyValue(BaseElement):
         Selects text in field, deletes it and writes new value
         :param value: money value
         """
-        # self.get_element().clear()
-        # Workaround to clear input field due problems with different browsers
-        self.get_element().send_keys(Keys.CONTROL + "a", Keys.DELETE)
-        self.get_element().send_keys(value)
-        self.get_element().send_keys(" ")
+        with pytest.allure.step("Writing \"{}\" to element \"{}\"".format(value, self.__class__.__name__)):
+            # self.get_element().clear()
+            # Workaround to clear input field due problems with different browsers
+            self.get_element().send_keys(Keys.CONTROL + "a", Keys.DELETE)
+            self.get_element().send_keys(str(value))
+            self.get_element().send_keys(" ")
 
 
-class SrcCurrency(CurrencyDropDown):
+class SrcCurrency(DropDown):
     """Source currency"""
     name = "converterFrom"
 
 
-class DstCurrency(CurrencyDropDown):
+class DstCurrency(DropDown):
     """Destination currency"""
     name = "converterTo"
 
@@ -35,7 +38,6 @@ class DstCurrency(CurrencyDropDown):
 class SrcCode(RadioGroup):
     """Type of source. Possible values: card, account or cash"""
     name = "sourceCode"
-    # options = ()
 
 
 class DstCode(RadioGroup):
@@ -116,8 +118,9 @@ class TimeConversion(BaseElement):
 
 
 class Submit(BaseElement):
-    """Button to submit passed data"""
-
+    """
+    Button to submit passed data
+    """
     locator = "button.rates-button"
 
     def set_value(self, value=None):
@@ -125,15 +128,29 @@ class Submit(BaseElement):
 
 
 class Result(BaseElement):
-    """Label with result conversion value"""
+    """
+    Label with result conversion value
+    """
 
     locator = "span.rates-converter-result__total-to"
 
-    def set_value(self, value=None):
-        pass
-
     def get_value(self):
         with pytest.allure.step("Waiting for result to be available: \"{}\"".format(self.locator)):
+            sleep(PAUSE_TIME)
+            WebDriverWait(self.driver, WAIT_TIME).until(
+                EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.locator), " "))
+        return self.get_element(self.locator, By.CSS_SELECTOR).text
+
+
+class ServicePackErrorLabel(BaseElement):
+    """
+    Label with error message if inappropriate options were selected
+    """
+    locator = "span.rates-aside__error"
+    error_text = "Нельзя выбрать пакет для данных типов валют"
+
+    def get_value(self):
+        with pytest.allure.step("Waiting for message to be available: \"{}\"".format(self.locator)):
             sleep(PAUSE_TIME)
             WebDriverWait(self.driver, WAIT_TIME).until(
                 EC.text_to_be_present_in_element((By.CSS_SELECTOR, self.locator), " "))

@@ -1,0 +1,3 @@
+source,destination,exchange_type
+"cash","cash","ibank"
+"account","cash","atm"

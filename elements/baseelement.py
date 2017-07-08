@@ -5,13 +5,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from conftest import WAIT_TIME, PAUSE_TIME #, webdriver
+from conftest import WAIT_TIME, PAUSE_TIME
 
 
 class BaseElement:
 
     """
-    Base page class that is initialized on every page object class.
+    Base element on webpage with unique locator
     """
 
     #: base locator
@@ -30,7 +30,6 @@ class BaseElement:
         :param by: type of locator
         :return: found element
         """
-
         if locator is None:
             locator = self.locator
         return self.driver.find_element(by=by, value=locator)
@@ -48,16 +47,18 @@ class BaseElement:
             sleep(PAUSE_TIME)
             element = WebDriverWait(self.driver, WAIT_TIME).until(
                 EC.element_to_be_clickable((by, locator)))
-            element.click()
+
+            with pytest.allure.step("Clicking element \"{}\"".format(self.__class__.__name__)):
+                element.click()
 
     def set_value(self, value):
         """
         Sets the given value
         """
-        raise NotImplementedError
+        pass
 
 
-class CurrencyDropDown(BaseElement):
+class DropDown(BaseElement):
 
     """
     Element presents dropdown list with following item: RUB CHF EUR GBP JPY USD
@@ -91,3 +92,6 @@ class RadioGroup(BaseElement):
         :param value: value of item that has to be selected
         """
         self.wait_and_click(self.locator.format(self.name, value))
+
+    def get_value(self, option_type):
+        return self.get_element(self.locator.format(self.name, option_type)).get_value()

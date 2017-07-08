@@ -1,0 +1,4 @@
+value,src_currency,dst_currency,source,destination,exchange_type,service_pack,time_conversion,result
+fgdfg,"GBP","JPY","cash","card","office","empty","14.01.2017 05:55","12 706 204,38 JPY"
+1,"CHF","GBP","account","cash","office","empty","30.06.2017 20:30","0,73 GBP"
+999 999 999 999.99,"RUB","USD","card","card","atm","empty","01.03.2004 00:00","34 965 034 965,00 USD"
