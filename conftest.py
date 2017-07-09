@@ -10,7 +10,6 @@ from selenium.webdriver import Chrome
 PAUSE_TIME = 0.1
 #: maximal time to wait until element become active
 WAIT_TIME = 15
-#: default path to file with test data
 
 
 @pytest.fixture()
