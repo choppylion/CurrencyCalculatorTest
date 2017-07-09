@@ -38,10 +38,17 @@ def import_test_data(filename):
         with open(path, 'r') as fr:
             reader = csv.DictReader(fr)
             header = reader.fieldnames
-            config = [
-                OrderedDict((key, row[key]) for key in header)
-                for row in reader
-            ]
+            config = []
+            for row in reader:
+                row_dict = OrderedDict()
+                for key in header:
+                    row_dict[key] = row[key]
+
+                xfail_value = row_dict.pop("xfail", "")
+                if xfail_value:
+                    row_dict = pytest.param(row_dict, marks=pytest.mark.xfail(reason=xfail_value))
+
+                config.append(row_dict)
             return config
     except Exception as e:
         raise IOError("Impossible to read test data:\n{}".format(e))

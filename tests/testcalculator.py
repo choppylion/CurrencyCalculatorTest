@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import pytest
 
 from conftest import import_test_data
@@ -27,7 +28,6 @@ class TestCalculator:
         real_result = page.get_conversion_result()
         assert expected_result == real_result
 
-    @pytest.mark.skip
     @pytest.mark.parametrize("config", import_test_data("unselectable_exchange.csv"))
     def test_unselectable_exchange(self, webdriver, config):
         """
