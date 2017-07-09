@@ -1,10 +1,7 @@
 from aenum import AutoNumberEnum
-from datetime import datetime, timedelta
-import pytest
+from datetime import timedelta
 
-from elements.calcelement import MoneyValue, SrcCurrency, DstCurrency, SrcCode, DstCode, \
-    ExchangeType, ServicePack, TimeConversion, GraphTime, GraphStartTime, GraphEndTime,\
-    Submit, Result, ServicePackError, ConversionRate
+from elements.calc_elements import *
 
 
 class Parameters(AutoNumberEnum):

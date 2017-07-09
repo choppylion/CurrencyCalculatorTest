@@ -2,7 +2,7 @@ from collections import OrderedDict
 import pytest
 
 from conftest import import_test_data
-from pages.calculatorpage import CalculatorPage, Parameters
+from pages.calculator_page import CalculatorPage, Parameters
 
 
 @pytest.mark.usefixtures("webdriver")
@@ -70,6 +70,11 @@ class TestCalculator:
 
     @pytest.mark.parametrize("config", import_test_data("graph_date_display.csv"))
     def test_graph_dates_display(self, webdriver, config):
+        """
+        Sets dates from config and asserts how they were applied to graph and their visibility
+        :param webdriver: selenium driver instance
+        :param config: test data for graph
+        """
         page = self.init_page(webdriver)
         page.set_params(config)
 
